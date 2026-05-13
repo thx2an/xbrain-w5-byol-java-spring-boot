@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>dev.byol</groupId>
+    <artifactId>byol-java-spring-boot</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <!--
+        BYOL challenge — Spring Boot 3 starter. Lambda support is intentionally
+        NOT pre-configured. Your tasks:
+
+        1. Pick a Lambda strategy:
+            a) aws-serverless-java-container-springboot3
+                - Add the dep below + a maven-shade-plugin build config that
+                  uses Spring's PropertiesMergingResourceTransformer.
+                - Write a `RequestStreamHandler` class.
+                - Cold start: 5–10 s (without SnapStart).
+            b) AWS Lambda Web Adapter
+                - Zero Java changes. Keep `mvn package` (Spring Boot fat jar).
+                - Edit template.yaml: add the Web Adapter Layer + run.sh.
+                - Cold start: 6–11 s (similar to (a) + ~200 ms overhead).
+            c) Spring Cloud Function + spring-cloud-function-adapter-aws
+                - Refactor controllers to `Function<Input, Output>` beans.
+                - Higher diff cost — only worth it if your real backend already
+                  uses functional style.
+
+        2. SnapStart is the big lever (cold start 5-10s → 200-500 ms). Worth
+           enabling in template.yaml as Bonus B if you have time.
+    -->
+
+    <properties>
+        <maven.compiler.source>21</maven.compiler.source>
+        <maven.compiler.target>21</maven.compiler.target>
+        <maven.compiler.parameters>true</maven.compiler.parameters>  <!-- Spring needs this so @PathVariable can auto-bind by parameter name -->
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <spring.boot.version>3.3.5</spring.boot.version>
+    </properties>
+
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>${spring.boot.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!--
+            TODO: add your Lambda adapter dep here. Examples:
+
+            <dependency>
+                <groupId>com.amazonaws.serverless</groupId>
+                <artifactId>aws-serverless-java-container-springboot3</artifactId>
+                <version>2.1.2</version>
+            </dependency>
+
+            OR (Spring Cloud Function):
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-function-adapter-aws</artifactId>
+            </dependency>
+
+            (Web Adapter needs no Java dep — it's a Lambda Layer.)
+        -->
+    </dependencies>
+
+    <build>
+        <finalName>${project.artifactId}</finalName>
+        <plugins>
+            <!--
+                Default Spring Boot plugin — produces a runnable fat jar in `target/`.
+                Works as-is for `java -jar` locally and for AWS Lambda Web Adapter.
+
+                TODO (only for aws-serverless-java-container path):
+                Replace this with maven-shade-plugin + PropertiesMergingResourceTransformer
+                (see https://github.com/awslabs/aws-serverless-java-container/wiki).
+                Spring Boot's default fat-jar layout (nested JARs) is NOT
+                Lambda-loadable; you need a flat uber-jar.
+            -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+                <version>${spring.boot.version}</version>
+            </plugin>
+        </plugins>
+    </build>
+</project>

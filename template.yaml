@@ -1,0 +1,88 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: BYOL challenge — Spring Boot on Lambda (your job to fill in the gaps)
+
+# ── Your tasks ─────────────────────────────────────────────────────────
+# 1. Application.java + HelloController.java work locally
+#    (`mvn spring-boot:run` → http://localhost:8080). Confirm.
+# 2. Decide HOW to put this on Lambda. Options to consider:
+#       a) aws-serverless-java-container-springboot3
+#                - Add dep + shade plugin to pom.xml
+#                - Write a RequestStreamHandler class
+#                - Handler = "<fqn>::handleRequest"
+#                - Cold start: 5–10 s (without SnapStart)
+#       b) AWS Lambda Web Adapter
+#                - No Java code changes
+#                - Add Layers + run.sh + Handler = "run.sh"
+#                - Cold start: ~6–11 s (similar + ~200 ms overhead)
+#       c) Spring Cloud Function
+#                - Refactor controllers to Function<,> beans
+#                - High diff cost; only worth it if your real backend is functional-style
+# 3. Fill in the `# TODO:` markers below.
+# 4. `sam build && sam deploy --guided` (region must be `us-west-2`).
+# ────────────────────────────────────────────────────────────────────────
+
+Globals:
+  Function:
+    Timeout: 30
+    MemorySize: 1024              # Java is heavy — 1024+ MB is mandatory for sane cold start
+    Runtime: java21
+    Architectures:
+      - arm64
+
+Resources:
+  SpringBootFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: byol-java-spring-boot
+      CodeUri: ./
+      # TODO: pick the Handler value matching your strategy.
+      #   aws-serverless-java-container → "dev.byol.lambda.<YourClass>::handleRequest"
+      #   Web Adapter                   → "run.sh" (with executable bit + run.sh in src/main/resources)
+      Handler: TODO_FILL_IN
+      Tracing: Active
+      # ────────── BONUS B: enable SnapStart to cut cold start to 200-500 ms ──────────
+      # AutoPublishAlias: live
+      # SnapStart:
+      #   ApplyOn: PublishedVersions
+      # ────────────────────────────────────────────────────────────────────────────────
+      # TODO (Web Adapter route only): pick the Layer ARN.
+      # https://github.com/awslabs/aws-lambda-web-adapter/releases
+      # Layers:
+      #   - arn:aws:lambda:us-west-2:753240598075:layer:LambdaAdapterLayerArm64:25
+      # Environment:
+      #   Variables:
+      #     AWS_LWA_PORT: '8080'
+      #     PORT: '8080'
+      Events:
+        ApiCatchAll:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref SpringBootHttpApi
+            Path: /{proxy+}
+            Method: ANY
+            PayloadFormatVersion: '2.0'
+        ApiRoot:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref SpringBootHttpApi
+            Path: /
+            Method: ANY
+            PayloadFormatVersion: '2.0'
+    Metadata:
+      BuildMethod: maven          # SAM runs `mvn package` and picks up target/*.jar
+
+  SpringBootHttpApi:
+    Type: AWS::Serverless::HttpApi
+    Properties:
+      StageName: $default
+
+  SpringBootLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/${SpringBootFunction}
+      RetentionInDays: 7
+
+Outputs:
+  ApiUrl:
+    Value: !Sub https://${SpringBootHttpApi}.execute-api.${AWS::Region}.amazonaws.com

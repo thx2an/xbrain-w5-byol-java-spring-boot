@@ -1,0 +1,10 @@
+target/
+.aws-sam/
+*.class
+.idea/
+*.iml
+.vscode/
+.env
+*.log
+.DS_Store
+HELP.md

@@ -1,0 +1,25 @@
+# Dockerfile.dev — local-dev only. NOT used for Lambda deploy.
+#
+# Lets you boot Spring Boot WITHOUT installing Maven/JDK 21 on your laptop.
+# Mirrors Step 0 of the BYOL WORKSHEET ("confirm the app works locally").
+#
+# Build:  docker build -f Dockerfile.dev -t byol-java-spring-boot:dev .
+# Run:    docker run --rm -p 8080:8080 byol-java-spring-boot:dev
+#
+# Or one-shot without building (mounts source so edits are live):
+#   docker run --rm -p 8080:8080 -v "$PWD":/app -w /app \
+#     maven:3.9-eclipse-temurin-21 mvn spring-boot:run
+
+FROM maven:3.9-eclipse-temurin-21
+
+WORKDIR /app
+
+# Cache deps layer — only re-runs when pom.xml changes
+COPY pom.xml .
+RUN mvn -B -q -DskipTests dependency:go-offline
+
+# Copy sources
+COPY src ./src
+
+EXPOSE 8080
+CMD ["mvn", "-q", "-DskipTests", "spring-boot:run"]
