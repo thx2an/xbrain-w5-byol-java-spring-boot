@@ -59,4 +59,4 @@ Sau khi deploy lên tài khoản AWS Workshop, đây là kết quả đo đượ
 | `template.yaml` | Cập nhật | - Chỉnh sửa `Handler: dev.byol.lambda.StreamLambdaHandler::handleRequest`<br>- Đổi `BuildMethod` thành `makefile`. |
 | `Makefile` | Tạo mới | Cấu hình cho SAM sử dụng lệnh `mvn` trực tiếp, đi vòng qua lỗi tương thích của các phiên bản SAM CLI mới nhất. |
 | `src/main/java/dev/byol/lambda/StreamLambdaHandler.java` | Tạo mới | Lớp Handler implements `RequestStreamHandler`, sử dụng `SpringBootLambdaContainerHandler.getHttpApiV2ProxyHandler()` để xử lý HttpApi payload v2. |
-| `NOTES.md` | Tạo mới | Chính là tài liệu giải trình này. |
+| `NOTES.md` | Tạo mới | Tài liệu giải trình. |
