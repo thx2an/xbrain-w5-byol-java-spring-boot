@@ -58,42 +58,49 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!--
-            TODO: add your Lambda adapter dep here. Examples:
-
-            <dependency>
-                <groupId>com.amazonaws.serverless</groupId>
-                <artifactId>aws-serverless-java-container-springboot3</artifactId>
-                <version>2.1.2</version>
-            </dependency>
-
-            OR (Spring Cloud Function):
-            <dependency>
-                <groupId>org.springframework.cloud</groupId>
-                <artifactId>spring-cloud-function-adapter-aws</artifactId>
-            </dependency>
-
-            (Web Adapter needs no Java dep — it's a Lambda Layer.)
-        -->
+        <!-- AWS Serverless Java Container — Strategy A -->
+        <dependency>
+            <groupId>com.amazonaws.serverless</groupId>
+            <artifactId>aws-serverless-java-container-springboot3</artifactId>
+            <version>2.1.2</version>
+        </dependency>
     </dependencies>
 
     <build>
         <finalName>${project.artifactId}</finalName>
         <plugins>
-            <!--
-                Default Spring Boot plugin — produces a runnable fat jar in `target/`.
-                Works as-is for `java -jar` locally and for AWS Lambda Web Adapter.
-
-                TODO (only for aws-serverless-java-container path):
-                Replace this with maven-shade-plugin + PropertiesMergingResourceTransformer
-                (see https://github.com/awslabs/aws-serverless-java-container/wiki).
-                Spring Boot's default fat-jar layout (nested JARs) is NOT
-                Lambda-loadable; you need a flat uber-jar.
-            -->
+            <!-- maven-shade-plugin: produces a flat uber-jar that Lambda can load.
+                 Spring Boot's default nested-JAR layout is NOT Lambda-compatible. -->
             <plugin>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-maven-plugin</artifactId>
-                <version>${spring.boot.version}</version>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.6.0</version>
+                <configuration>
+                    <createDependencyReducedPom>false</createDependencyReducedPom>
+                </configuration>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals><goal>shade</goal></goals>
+                        <configuration>
+                            <transformers>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+                                    <mainClass>dev.byol.Application</mainClass>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/spring.handlers</resource>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/spring.factories</resource>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                                    <resource>META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports</resource>
+                                </transformer>
+                                <transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+                            </transformers>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

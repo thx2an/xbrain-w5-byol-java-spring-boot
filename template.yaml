@@ -39,7 +39,7 @@ Resources:
       # TODO: pick the Handler value matching your strategy.
       #   aws-serverless-java-container → "dev.byol.lambda.<YourClass>::handleRequest"
       #   Web Adapter                   → "run.sh" (with executable bit + run.sh in src/main/resources)
-      Handler: TODO_FILL_IN
+      Handler: dev.byol.lambda.StreamLambdaHandler::handleRequest
       Tracing: Active
       # ────────── BONUS B: enable SnapStart to cut cold start to 200-500 ms ──────────
       # AutoPublishAlias: live
@@ -70,7 +70,7 @@ Resources:
             Method: ANY
             PayloadFormatVersion: '2.0'
     Metadata:
-      BuildMethod: maven          # SAM runs `mvn package` and picks up target/*.jar
+      BuildMethod: makefile        # Uses Makefile to run `mvn package` and copy jar to artifacts
 
   SpringBootHttpApi:
     Type: AWS::Serverless::HttpApi
